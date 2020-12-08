@@ -1,0 +1,11 @@
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+    <bean id="main" class="edu.mcw.rgd.Main">
+        <property name="version" value="Mutant Strain Annotation pipeline  -- build Dec 08, 2020" />
+        <property name="createdBy" value="74" />
+        <property name="dao" ref="dao"/>
+    </bean>
+
+    <bean id="dao" class="edu.mcw.rgd.Dao">
+    </bean>
+</beans>
