@@ -1,8 +1,12 @@
 package edu.mcw.rgd;
 
 import edu.mcw.rgd.dao.impl.AnnotationDAO;
+import edu.mcw.rgd.dao.impl.AssociationDAO;
 import edu.mcw.rgd.dao.impl.OrthologDAO;
+import edu.mcw.rgd.dao.impl.StrainDAO;
 import edu.mcw.rgd.datamodel.Ortholog;
+import edu.mcw.rgd.datamodel.Strain;
+import edu.mcw.rgd.datamodel.Strain2MarkerAssociation;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
@@ -19,14 +23,60 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Dao {
 
     AnnotationDAO annotationDAO = new AnnotationDAO();
+    AssociationDAO associationDAO = new AssociationDAO();
     OrthologDAO orthologDAO = new OrthologDAO();
+    StrainDAO strainDAO = new StrainDAO();
 
+    Logger log = Logger.getLogger("status");
     Logger logInserted = Logger.getLogger("inserted");
     Logger logDeleted = Logger.getLogger("deleted");
+
+    private Set<String> processedEvidenceCodes;
 
     public String getConnectionInfo() {
         return annotationDAO.getConnectionInfo();
     }
+
+    public List<Strain> getMutantStrains() throws Exception {
+        return strainDAO.getStrainsByType("mutant");
+    }
+
+    public List<Annotation> getBaseAnnotations(String aspect) throws Exception {
+
+        List<Strain> mutantStrains = getMutantStrains();
+        log.info("  mutant strains: "+mutantStrains.size());
+        List<Integer> mutantStrainRgdIds = new ArrayList<>(mutantStrains.size());
+        for( Strain s: mutantStrains ) {
+            mutantStrainRgdIds.add(s.getRgdId());
+        }
+
+        List<Annotation> annots = new ArrayList<>();
+        for( int i=0; i<mutantStrainRgdIds.size(); i+=1000 ) {
+            int j = i+1000;
+            if( j>mutantStrainRgdIds.size() ) {
+                j = mutantStrainRgdIds.size();
+            }
+            List<Integer> rgdIds = mutantStrainRgdIds.subList(i, j);
+            annots.addAll( annotationDAO.getAnnotationsByRgdIdsListAndAspect(rgdIds, aspect) );
+        }
+        log.info("  mutant strain annots with aspect "+aspect+": "+mutantStrains.size());
+
+        // keep only annotations with approved evidence codes
+        annots.removeIf(a -> !getProcessedEvidenceCodes().contains(a.getEvidence()));
+
+        Collections.shuffle(annots);
+
+        return annots;
+    }
+
+    public List<Strain2MarkerAssociation> getGeneAlleles(int rgdId) throws Exception {
+        // retrieve all strain 2 gene associations
+        // leave only alleles (marker_type='allele' or marker_type is NULL)
+        List<Strain2MarkerAssociation> geneAlleles = associationDAO.getStrain2GeneAssociations(rgdId);
+        geneAlleles.removeIf(i -> !Utils.stringsAreEqual(Utils.NVL(i.getMarkerType(), "allele"), "allele"));
+        return geneAlleles;
+    }
+
 
     synchronized public List<Ortholog> getOrthologsForSourceRgdId(int rgdId, Set<Integer> allowedSpeciesTypeKeys) throws Exception {
         List<Ortholog> orthos = _orthoCache.get(rgdId);
@@ -40,22 +90,6 @@ public class Dao {
     }
     Map<Integer, List<Ortholog>> _orthoCache = new HashMap<>();
 
-    public int getAnnotationCount(int refRgdId) throws Exception {
-        return annotationDAO.getCountOfAnnotationsByReference(refRgdId);
-    }
-
-    public List<Annotation> getIncomingAnnotations(int refRgdId, String forbiddenAspectClause, String evidenceClause, String speciesClause) throws Exception {
-
-        String sql = ""+
-        "SELECT a.*,i.species_type_key FROM full_annot a,rgd_ids i "+
-        "WHERE rgd_id=annotated_object_rgd_id AND object_key=1 AND object_status='ACTIVE' "+
-                " AND ref_rgd_id<>?" +
-                " AND aspect NOT IN("+forbiddenAspectClause+")"+
-                " AND (evidence IN("+evidenceClause+")"+
-                "   OR (evidence='TAS' AND aspect='W') )"+
-                " AND species_type_key IN("+speciesClause+")";
-        return annotationDAO.executeAnnotationQuery(sql, refRgdId);
-    }
 
     public int getAnnotationCount(int rgdId, String termAcc, String qualifier, int refRgdId) throws Exception {
 
@@ -135,5 +169,13 @@ public class Dao {
         int rws = annotationDAO.deleteAnnotations(keys);
         log.debug("  stale annots deleted = "+rws);
         return rws;
+    }
+
+    public void setProcessedEvidenceCodes(Set<String> processedEvidenceCodes) {
+        this.processedEvidenceCodes = processedEvidenceCodes;
+    }
+
+    public Set<String> getProcessedEvidenceCodes() {
+        return processedEvidenceCodes;
     }
 }

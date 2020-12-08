@@ -1,5 +1,10 @@
 package edu.mcw.rgd;
 
+import edu.mcw.rgd.dao.impl.AssociationDAO;
+import edu.mcw.rgd.datamodel.Strain;
+import edu.mcw.rgd.datamodel.Strain2MarkerAssociation;
+import edu.mcw.rgd.datamodel.ontology.Annotation;
+import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -8,6 +13,8 @@ import org.springframework.core.io.FileSystemResource;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author mtutaj
@@ -44,7 +51,31 @@ public class Main {
         log.info("  "+dao.getConnectionInfo());
         log.info("===");
 
+
+        CounterPool counters = new CounterPool();
+
         // TODO:
+        List<Annotation> baseAnnots = getDao().getBaseAnnotations("D");
+        counters.add("  base annotations for disease ontology ", baseAnnots.size());
+
+        baseAnnots.parallelStream().forEach( a -> {
+            List<Strain2MarkerAssociation> geneAlleles;
+
+            try {
+                geneAlleles = getDao().getGeneAlleles(a.getAnnotatedObjectRgdId());
+                if( geneAlleles.isEmpty() ) {
+                    counters.increment("  base annotations without gene alleles");
+                } else if( geneAlleles.size()==1 ) {
+                    counters.increment("  base annotations with one gene allele");
+                } else {
+                    counters.increment("  base annotations with multiple gene alleles");
+                }
+            } catch(Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        log.info(counters.dumpAlphabetically());
 
         log.info("=== DONE ===  elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
         log.info("");

@@ -7,5 +7,11 @@
     </bean>
 
     <bean id="dao" class="edu.mcw.rgd.Dao">
+        <property name="processedEvidenceCodes">
+            <set>
+                <value>IMP</value>
+                <value>IAGP</value>
+            </set>
+        </property>
     </bean>
 </beans>
