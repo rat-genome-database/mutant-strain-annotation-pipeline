@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author mtutaj
@@ -27,7 +28,8 @@ public class Main {
     private Dao dao;
     private int createdBy;
     private String version;
-    
+    private Set<String> strainRestrictedQualifiers;
+
     public static void main(String[] args) throws Exception {
 
         DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
@@ -58,6 +60,7 @@ public class Main {
         List<Annotation> baseAnnots = getDao().getBaseAnnotations("D");
         counters.add("  base annotations for disease ontology ", baseAnnots.size());
 
+        AnnotCache alleleAnnots = new AnnotCache();
         baseAnnots.parallelStream().forEach( a -> {
             List<Strain2MarkerAssociation> geneAlleles;
 
@@ -67,6 +70,16 @@ public class Main {
                     counters.increment("  base annotations without gene alleles");
                 } else if( geneAlleles.size()==1 ) {
                     counters.increment("  base annotations with one gene allele");
+
+                    Annotation alleleAnn = qcGeneAllele(a, geneAlleles.get(0));
+                    if( alleleAnn.getKey()==0 ) {
+                        counters.increment("   gene allele annotations to be inserted");
+                        alleleAnnots.add(alleleAnn);
+                    } else {
+                        counters.increment("   gene allele annotations up-to-date");
+                    }
+
+
                 } else {
                     counters.increment("  base annotations with multiple gene alleles");
                 }
@@ -75,10 +88,43 @@ public class Main {
             }
         });
 
+        // insert gene alleles
+        counters.add("   gene allele annotations x inserted", alleleAnnots.size());
+
         log.info(counters.dumpAlphabetically());
 
         log.info("=== DONE ===  elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
         log.info("");
+    }
+
+    Annotation qcGeneAllele(Annotation strainAnn, Strain2MarkerAssociation assoc) throws Exception {
+
+        int geneAlleleRgdId = assoc.getDetailRgdId();
+
+        // create incoming gene allele annotation
+        Annotation alleleAnn = (Annotation) strainAnn.clone();
+        alleleAnn.setKey(0);
+        alleleAnn.setAnnotatedObjectRgdId(geneAlleleRgdId);
+
+        // RULE: if an annotation has a strain-restricted qualifier, QUALIFIER and WITH_INFO must not be propagated
+        if( strainAnn.getQualifier()!=null &&
+              ( getStrainRestrictedQualifiers().contains(strainAnn.getQualifier())
+             || strainAnn.getQualifier().startsWith("MODEL") )
+        ) {
+            alleleAnn.setQualifier(null);
+            alleleAnn.setWithInfo(null);
+        }
+
+        alleleAnn.setCreatedBy(getCreatedBy());
+        alleleAnn.setCreatedDate(new Date());
+        alleleAnn.setLastModifiedBy(getCreatedBy());
+        alleleAnn.setLastModifiedDate(new Date());
+
+        int annotKey = getDao().getAnnotationKey(alleleAnn);
+        if( annotKey!=0 ) {
+            alleleAnn.setKey(annotKey);
+        }
+        return alleleAnn;
     }
 
     public void setDao(Dao dao) {
@@ -103,6 +149,14 @@ public class Main {
 
     public String getVersion() {
         return version;
+    }
+
+    public void setStrainRestrictedQualifiers(Set<String> strainRestrictedQualifiers) {
+        this.strainRestrictedQualifiers = strainRestrictedQualifiers;
+    }
+
+    public Set<String> getStrainRestrictedQualifiers() {
+        return strainRestrictedQualifiers;
     }
 }
 

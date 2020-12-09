@@ -1,2 +1,2 @@
-Dec 8, 2020
-
+Dec 9, 2020
+  implemented qc for gene allele annotations

@@ -4,6 +4,13 @@
         <property name="version" value="Mutant Strain Annotation pipeline  -- build Dec 08, 2020" />
         <property name="createdBy" value="74" />
         <property name="dao" ref="dao"/>
+        <property name="strainRestrictedQualifiers">
+            <set>
+                <value>induced</value>
+                <value>penetrance</value>
+                <value>MODEL</value>
+            </set>
+        </property>
     </bean>
 
     <bean id="dao" class="edu.mcw.rgd.Dao">
