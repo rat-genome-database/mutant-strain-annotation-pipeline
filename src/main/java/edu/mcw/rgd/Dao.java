@@ -1,18 +1,13 @@
 package edu.mcw.rgd;
 
-import edu.mcw.rgd.dao.impl.AnnotationDAO;
-import edu.mcw.rgd.dao.impl.AssociationDAO;
-import edu.mcw.rgd.dao.impl.OrthologDAO;
-import edu.mcw.rgd.dao.impl.StrainDAO;
-import edu.mcw.rgd.datamodel.Ortholog;
-import edu.mcw.rgd.datamodel.Strain;
-import edu.mcw.rgd.datamodel.Strain2MarkerAssociation;
+import edu.mcw.rgd.dao.impl.*;
+import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 /**
  * @author mtutaj
@@ -24,6 +19,7 @@ public class Dao {
 
     AnnotationDAO annotationDAO = new AnnotationDAO();
     AssociationDAO associationDAO = new AssociationDAO();
+    GeneDAO geneDAO = new GeneDAO();
     OrthologDAO orthologDAO = new OrthologDAO();
     StrainDAO strainDAO = new StrainDAO();
 
@@ -59,7 +55,7 @@ public class Dao {
             List<Integer> rgdIds = mutantStrainRgdIds.subList(i, j);
             annots.addAll( annotationDAO.getAnnotationsByRgdIdsListAndAspect(rgdIds, aspect) );
         }
-        log.info("  mutant strain annots with aspect "+aspect+": "+mutantStrains.size());
+        log.info("  mutant strain annots with aspect "+aspect+": "+annots.size());
 
         // keep only annotations with approved evidence codes
         annots.removeIf(a -> !getProcessedEvidenceCodes().contains(a.getEvidence()));
@@ -69,7 +65,7 @@ public class Dao {
         return annots;
     }
 
-    public List<Strain2MarkerAssociation> getGeneAlleles(int rgdId) throws Exception {
+    public List<Strain2MarkerAssociation> getGeneAllelesForStrain(int rgdId) throws Exception {
         // retrieve all strain 2 gene associations
         // leave only alleles (marker_type='allele' or marker_type is NULL)
         List<Strain2MarkerAssociation> geneAlleles = associationDAO.getStrain2GeneAssociations(rgdId);
@@ -77,6 +73,13 @@ public class Dao {
         return geneAlleles;
     }
 
+    public Gene getGene(int rgdId) throws Exception {
+        return geneDAO.getGene(rgdId);
+    }
+
+    public List<Gene> getGeneFromAllele(int alleleRgdId) throws Exception {
+        return geneDAO.getGeneFromVariant(alleleRgdId);
+    }
 
     synchronized public List<Ortholog> getOrthologsForSourceRgdId(int rgdId, Set<Integer> allowedSpeciesTypeKeys) throws Exception {
         List<Ortholog> orthos = _orthoCache.get(rgdId);
@@ -91,30 +94,6 @@ public class Dao {
     Map<Integer, List<Ortholog>> _orthoCache = new HashMap<>();
 
 
-    public int getAnnotationCount(int rgdId, String termAcc, String qualifier, int refRgdId) throws Exception {
-
-        String key = rgdId+"|"+termAcc+"|"+qualifier;
-        Integer cnt = _annotCache2.get(key);
-        if( cnt!=null ) {
-            return cnt;
-        }
-
-        List<Annotation> annots = annotationDAO.getAnnotations(rgdId, termAcc);
-        Iterator<Annotation> it = annots.iterator();
-        while( it.hasNext() ) {
-            Annotation a = it.next();
-            if( refRgdId==a.getRefRgdId() ) {
-                it.remove();
-                continue;
-            }
-            if( !Utils.stringsAreEqual(qualifier, a.getQualifier()) ) {
-                it.remove();
-            }
-        }
-        _annotCache2.put(key, annots.size());
-        return annots.size();
-    }
-    static ConcurrentHashMap<String, Integer> _annotCache2 = new ConcurrentHashMap<>();
 
     /**
      * get annotation key by a list of values that comprise unique key:

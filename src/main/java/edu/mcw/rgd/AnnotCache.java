@@ -8,12 +8,16 @@ public class AnnotCache {
 
     private ConcurrentHashMap<String, Annotation> _cache = new ConcurrentHashMap<>();
 
-    void add(Annotation a) {
+    public void add(Annotation a) {
         String key = computeKey(a);
         _cache.putIfAbsent(key, a);
     }
 
-    int size() {
+    public int insertAnnotations(Dao dao) throws Exception {
+
+        for( Annotation a: _cache.values() ) {
+            dao.insertAnnotation(a);
+        }
         return _cache.size();
     }
 

@@ -1,2 +1,2 @@
-Dec 9, 2020
-  implemented qc for gene allele annotations
+Dec 10, 2020
+  first full release of the pipeline for both disease and phenotype annotations
