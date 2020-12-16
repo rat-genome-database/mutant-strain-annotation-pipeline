@@ -70,9 +70,14 @@ public class Main {
         List<Annotation> baseAnnots = getDao().getBaseAnnotations(aspect);
         counters.add("  base annotations for ontology with aspect "+aspect, baseAnnots.size());
 
-        AnnotCache alleleAnnots = new AnnotCache();
-        AnnotCache geneAnnots = new AnnotCache();
-        AnnotCache orthologGeneAnnots = new AnnotCache();
+        AnnotCache inRgdAnnots = new AnnotCache();
+        int initAnnotCount = inRgdAnnots.loadFromDb(getCreatedBy(), aspect, getDao());
+        counters.add("IN RGD INITIAL ANNOTATION COUNT", initAnnotCount);
+
+
+        List<Annotation> alleleAnnots = new ArrayList<>();
+        List<Annotation> geneAnnots = new ArrayList<>();
+        List<Annotation> orthologGeneAnnots = new ArrayList<>();
 
         baseAnnots.parallelStream().forEach( a -> {
             List<Strain2MarkerAssociation> geneAlleles;
@@ -92,11 +97,8 @@ public class Main {
                     }
 
                     Annotation alleleAnn = qcGeneAllele(a, geneAlleles.get(0));
-                    if (alleleAnn.getKey() == 0) {
-                        counters.increment("  gene allele annotations to be inserted");
+                    synchronized (alleleAnnots) {
                         alleleAnnots.add(alleleAnn);
-                    } else {
-                        counters.increment("  gene allele annotations up-to-date");
                     }
 
                     Gene gene = geneFromAllele(alleleAnn);
@@ -104,22 +106,13 @@ public class Main {
                         return; // unexpected
                     }
                     Annotation geneAnn = qcGene(gene, alleleAnn);
-
-                    if( geneAnn.getKey()==0 ) {
-                        counters.increment("  gene annotations to be inserted");
+                    synchronized (geneAnnots) {
                         geneAnnots.add(geneAnn);
-                    } else {
-                        counters.increment("  gene annotations up-to-date");
                     }
 
                     List<Annotation> oAnnots = qcOrthologAnnots(geneAnn);
-                    for( Annotation oAnnot: oAnnots ) {
-                        if( oAnnot.getKey()==0 ) {
-                            counters.increment("  ortholog gene annotations to be inserted");
-                            orthologGeneAnnots.add(oAnnot);
-                        } else {
-                            counters.increment("  ortholog gene annotations up-to-date");
-                        }
+                    synchronized (orthologGeneAnnots) {
+                        orthologGeneAnnots.addAll(oAnnots);
                     }
                 } else {
                     counters.increment("  base annotations with multiple gene alleles");
@@ -129,14 +122,14 @@ public class Main {
             }
         });
 
-        int inserted = alleleAnnots.insertAnnotations(getDao());
-        counters.add(" gene allele annotations inserted", inserted);
+        inRgdAnnots.qcAndLoad(alleleAnnots, " gene allele annotations", counters, getDao());
+        inRgdAnnots.qcAndLoad(geneAnnots, " gene annotations", counters, getDao());
+        inRgdAnnots.qcAndLoad(orthologGeneAnnots, " ortholog gene annotations", counters, getDao());
 
-        inserted = geneAnnots.insertAnnotations(getDao());
-        counters.add(" gene annotations inserted", inserted);
+        int deleted = inRgdAnnots.deleteOrphanedAnnotations(getDao());
+        counters.add(" total annotations deleted", deleted);
 
-        inserted = orthologGeneAnnots.insertAnnotations(getDao());
-        counters.add(" ortholog gene annotations inserted", inserted);
+        counters.add("FINAL ANNOTATION COUNT ", inRgdAnnots.size());
 
         log.info(counters.dumpAlphabetically());
     }
@@ -226,11 +219,6 @@ public class Main {
         derivedAnn.setCreatedDate(new Date());
         derivedAnn.setLastModifiedBy(getCreatedBy());
         derivedAnn.setLastModifiedDate(new Date());
-
-        int annotKey = getDao().getAnnotationKey(derivedAnn);
-        if( annotKey!=0 ) {
-            derivedAnn.setKey(annotKey);
-        }
         return derivedAnn;
     }
 

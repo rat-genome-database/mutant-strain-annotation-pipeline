@@ -1,2 +1,5 @@
+Dec 16, 2020
+  implemented propagation of annotation updates and removal of obsolete annotations
+
 Dec 10, 2020
   first full release of the pipeline for both disease and phenotype annotations

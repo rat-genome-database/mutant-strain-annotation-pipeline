@@ -25,6 +25,7 @@ public class Dao {
 
     Logger log = Logger.getLogger("status");
     Logger logInserted = Logger.getLogger("inserted");
+    Logger logUpdated = Logger.getLogger("updated");
     Logger logDeleted = Logger.getLogger("deleted");
 
     private Set<String> processedEvidenceCodes;
@@ -94,24 +95,28 @@ public class Dao {
     Map<Integer, List<Ortholog>> _orthoCache = new HashMap<>();
 
 
-
-    /**
-     * get annotation key by a list of values that comprise unique key:
-     * TERM_ACC+ANNOTATED_OBJECT_RGD_ID+REF_RGD_ID+EVIDENCE+WITH_INFO+QUALIFIER+XREF_SOURCE
-     * @param annot Annotation object with the following fields set: TERM_ACC+ANNOTATED_OBJECT_RGD_ID+REF_RGD_ID+EVIDENCE+WITH_INFO+QUALIFIER+XREF_SOURCE
-     * @return value of annotation key or 0 if there is no such annotation
-     * @throws Exception on spring framework dao failure
-     */
     public int getAnnotationKey(Annotation annot) throws Exception {
         return annotationDAO.getAnnotationKey(annot);
     }
 
-    public Annotation getAnnotation(int annotKey) throws Exception {
-        return annotationDAO.getAnnotation(annotKey);
+    public List<Annotation> getAnnotationsModifiedBeforeTimestamp(int createdBy, Date dt, String aspect) throws Exception{
+        return annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, aspect);
     }
 
-    public void updateAnnotation(Annotation annot) throws Exception {
-        annotationDAO.updateAnnotation(annot);
+    public void updateAnnotation(Annotation a, Annotation annotInRgd) throws Exception {
+
+        String msg = "KEY:" + a.getKey() + " " + a.getTermAcc() + " RGD:" + a.getAnnotatedObjectRgdId() + " RefRGD:" + a.getRefRgdId() + " " + a.getEvidence() + " W:" + a.getWithInfo();
+        if( !Utils.stringsAreEqual(annotInRgd.getAnnotationExtension(), a.getAnnotationExtension()) ) {
+            msg += "\n   ANNOT_EXT  OLD["+Utils.NVL(annotInRgd.getAnnotationExtension(),"")+"]  NEW["+a.getAnnotationExtension()+"]";
+        }
+        if( !Utils.stringsAreEqual(annotInRgd.getGeneProductFormId(), a.getGeneProductFormId()) ) {
+            msg += "\n   GENE_FORM  OLD["+Utils.NVL(annotInRgd.getGeneProductFormId(),"")+"]  NEW["+a.getGeneProductFormId()+"]";
+        }
+        if( !Utils.stringsAreEqual(annotInRgd.getNotes(), a.getNotes()) ) {
+            msg += "\n   NOTES  OLD["+Utils.NVL(annotInRgd.getNotes(),"")+"]  NEW["+a.getNotes()+"]";
+        }
+        logUpdated.info(msg);
+        annotationDAO.updateAnnotation(a);
     }
 
     /**
@@ -127,27 +132,13 @@ public class Dao {
         return annotationDAO.insertAnnotation(annot);
     }
 
-    public int updateLastModified(List<Integer> fullAnnotKeys) throws Exception{
-        return annotationDAO.updateLastModified(fullAnnotKeys);
+    public void updateLastModified(int fullAnnotKey) throws Exception{
+        annotationDAO.updateLastModified(fullAnnotKey);
     }
 
-    public int deleteAnnotationsCreatedBy(int createdBy, Date dt, int refRgdId, Logger log) throws Exception{
-
-        List<Annotation> staleAnnots = annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, refRgdId);
-        log.debug("  stale annots found = "+staleAnnots.size());
-        if( staleAnnots.isEmpty() ) {
-            return 0;
-        }
-
-        List<Integer> keys = new ArrayList<>(staleAnnots.size());
-        for( Annotation a: staleAnnots ) {
-            logDeleted.debug(a.dump("|"));
-            keys.add(a.getKey());
-        }
-
-        int rws = annotationDAO.deleteAnnotations(keys);
-        log.debug("  stale annots deleted = "+rws);
-        return rws;
+    public void deleteAnnotation(Annotation a) throws Exception{
+        logDeleted.debug(a.dump("|"));
+        annotationDAO.deleteAnnotation(a.getKey());
     }
 
     public void setProcessedEvidenceCodes(Set<String> processedEvidenceCodes) {
