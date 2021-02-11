@@ -5,11 +5,10 @@ import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.Utils;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class AnnotCache {
 
-    private Date cutoffDate = new Date();
+    private Date cutoffDate = Utils.addMinutesToDate(new Date(), -5);
 
     private HashMap<String, Annotation> inRgdAnnots = new HashMap<>();
 
@@ -34,6 +33,7 @@ public class AnnotCache {
 
     public void qcAndLoad(List<Annotation> incomingAnnots, String counterPrefix, CounterPool counters, Dao dao) throws Exception {
 
+        Collections.shuffle(incomingAnnots);
         for( Annotation a: incomingAnnots ) {
 
             String key = AnnotCache.computeKey(a);

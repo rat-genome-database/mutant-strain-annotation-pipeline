@@ -79,6 +79,7 @@ public class Main {
         List<Annotation> geneAnnots = new ArrayList<>();
         List<Annotation> orthologGeneAnnots = new ArrayList<>();
 
+        Collections.shuffle(baseAnnots);
         baseAnnots.parallelStream().forEach( a -> {
             List<Strain2MarkerAssociation> geneAlleles;
 

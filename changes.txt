@@ -1,3 +1,6 @@
+Feb 11, 2021
+  fixed potential issue with obsolete annotations
+
 Dec 16, 2020
   implemented propagation of annotation updates and removal of obsolete annotations
 
