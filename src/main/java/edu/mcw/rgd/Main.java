@@ -11,6 +11,7 @@ import org.springframework.core.io.FileSystemResource;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author mtutaj
@@ -79,6 +80,8 @@ public class Main {
         List<Annotation> geneAnnots = new ArrayList<>();
         List<Annotation> orthologGeneAnnots = new ArrayList<>();
 
+        ConcurrentHashMap<String, String> mapAlleleGeneWarnings = new ConcurrentHashMap<>();
+
         Collections.shuffle(baseAnnots);
         baseAnnots.parallelStream().forEach( a -> {
             List<Strain2MarkerAssociation> geneAlleles;
@@ -93,7 +96,11 @@ public class Main {
                     int alleleRgdId = geneAlleles.get(0).getDetailRgdId();
                     Gene allele = getDao().getGene(alleleRgdId);
                     if( !allele.isVariant() ) {
-                        log.warn("WARNING! "+a.getObjectSymbol()+" RGD:"+a.getAnnotatedObjectRgdId()+"  is associated with a gene: "+allele.getSymbol()+" RGD:"+allele.getRgdId());
+                        String msg = "WARNING! "+a.getObjectSymbol()+" RGD:"+a.getAnnotatedObjectRgdId()+"  is associated with a gene: "+allele.getSymbol()+" RGD:"+allele.getRgdId();
+                        String prevMsg = mapAlleleGeneWarnings.putIfAbsent(msg, msg);
+                        if( prevMsg==null ) {
+                            log.warn(msg);
+                        }
                         return;
                     }
 
