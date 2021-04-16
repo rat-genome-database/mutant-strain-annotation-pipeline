@@ -138,13 +138,9 @@ public class Allele2GeneAnnotator extends BaseAnnotator {
         }
 
         if( derivedAnn.getEvidence().equals("ISO") ) {
-            // ISO annots must have WITH_INFO field set
+            // ISO annots must have WITH_INFO field set to RGD ID of source annotation
             String withInfo = "RGD:"+a.getAnnotatedObjectRgdId();
-            if( derivedAnn.getWithInfo() == null ) {
-                derivedAnn.setWithInfo(withInfo);
-            } else {
-                derivedAnn.setWithInfo(derivedAnn.getWithInfo()+"|"+withInfo);
-            }
+            derivedAnn.setWithInfo(withInfo);
         }
 
         // set up properly rgd-id related fields
