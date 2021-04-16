@@ -38,7 +38,35 @@ public class Dao {
         return strainDAO.getStrainsByType("mutant");
     }
 
-    public List<Annotation> getBaseAnnotations(String aspect) throws Exception {
+    public List<Annotation> getBaseAnnotationsForAlleles(String aspect) throws Exception {
+
+        List<Gene> mutantAlleles = geneDAO.getActiveGenesByType("allele", SpeciesType.RAT);
+        log.info("  mutant alleles: "+mutantAlleles.size());
+        List<Integer> mutantAlleleRgdIds = new ArrayList<>(mutantAlleles.size());
+        for( Gene g: mutantAlleles ) {
+            mutantAlleleRgdIds.add(g.getRgdId());
+        }
+
+        List<Annotation> annots = new ArrayList<>();
+        for( int i=0; i<mutantAlleleRgdIds.size(); i+=1000 ) {
+            int j = i+1000;
+            if( j>mutantAlleleRgdIds.size() ) {
+                j = mutantAlleleRgdIds.size();
+            }
+            List<Integer> rgdIds = mutantAlleleRgdIds.subList(i, j);
+            annots.addAll( annotationDAO.getAnnotationsByRgdIdsListAndAspect(rgdIds, aspect) );
+        }
+        log.info("  mutant allele annots with aspect "+aspect+": "+annots.size());
+
+        // keep only annotations with approved evidence codes
+        annots.removeIf(a -> !getProcessedEvidenceCodes().contains(a.getEvidence()));
+
+        Collections.shuffle(annots);
+
+        return annots;
+    }
+
+    public List<Annotation> getBaseAnnotationsForMutantStrains(String aspect) throws Exception {
 
         List<Strain> mutantStrains = getMutantStrains();
         log.info("  mutant strains: "+mutantStrains.size());

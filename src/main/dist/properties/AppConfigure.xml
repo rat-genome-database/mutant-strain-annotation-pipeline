@@ -2,6 +2,18 @@
 <beans>
     <bean id="main" class="edu.mcw.rgd.Main">
         <property name="version" value="Mutant Strain Annotation pipeline  -- version 2021-03-18" />
+    </bean>
+
+    <bean id="dao" class="edu.mcw.rgd.Dao">
+        <property name="processedEvidenceCodes">
+            <set>
+                <value>IMP</value>
+                <value>IAGP</value>
+            </set>
+        </property>
+    </bean>
+
+    <bean id="strainAnnotator" class="edu.mcw.rgd.Strain2AlleleAnnotator">
         <property name="createdBy" value="74" />
         <property name="dao" ref="dao"/>
         <property name="strainRestrictedQualifiers">
@@ -13,12 +25,8 @@
         </property>
     </bean>
 
-    <bean id="dao" class="edu.mcw.rgd.Dao">
-        <property name="processedEvidenceCodes">
-            <set>
-                <value>IMP</value>
-                <value>IAGP</value>
-            </set>
-        </property>
+    <bean id="alleleAnnotator" class="edu.mcw.rgd.Allele2GeneAnnotator">
+        <property name="createdBy" value="75" />
+        <property name="dao" ref="dao"/>
     </bean>
 </beans>

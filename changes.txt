@@ -1,3 +1,6 @@
+Apr 16, 2021
+  added a module to propagate allele annotations to genes and orthologs assuming there are no similar annotations already
+
 Mar 18, 2021
   improved summary email
 
