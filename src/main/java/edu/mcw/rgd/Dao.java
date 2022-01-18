@@ -4,7 +4,8 @@ import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.Map;
@@ -23,10 +24,10 @@ public class Dao {
     OrthologDAO orthologDAO = new OrthologDAO();
     StrainDAO strainDAO = new StrainDAO();
 
-    Logger log = Logger.getLogger("status");
-    Logger logInserted = Logger.getLogger("inserted");
-    Logger logUpdated = Logger.getLogger("updated");
-    Logger logDeleted = Logger.getLogger("deleted");
+    Logger log = LogManager.getLogger("status");
+    Logger logInserted = LogManager.getLogger("inserted");
+    Logger logUpdated = LogManager.getLogger("updated");
+    Logger logDeleted = LogManager.getLogger("deleted");
 
     private Set<String> processedEvidenceCodes;
 
