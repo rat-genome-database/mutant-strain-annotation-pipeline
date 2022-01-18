@@ -5,7 +5,8 @@ import edu.mcw.rgd.datamodel.Ortholog;
 import edu.mcw.rgd.datamodel.RgdId;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.process.CounterPool;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,7 +25,7 @@ public class Allele2GeneAnnotator extends BaseAnnotator {
 
     private int createdBy; // unique pipeline id
 
-    Logger log = Logger.getLogger("status");
+    Logger log = LogManager.getLogger("status");
 
 
     public void run() throws Exception {
