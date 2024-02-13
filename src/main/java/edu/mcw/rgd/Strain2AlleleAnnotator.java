@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Strain2AlleleAnnotator extends BaseAnnotator {
 
@@ -113,15 +114,23 @@ public class Strain2AlleleAnnotator extends BaseAnnotator {
         return alleleAnn;
     }
 
+    static Set<String> _warnings = new ConcurrentSkipListSet<>();
+
     Gene geneFromAllele(Annotation alleleAnn) throws Exception {
 
         List<Gene> genes = getDao().getGeneFromAllele(alleleAnn.getAnnotatedObjectRgdId());
         if (genes.isEmpty()) {
-            log.warn("Allele " + alleleAnn.getObjectSymbol() + " RGD:" + alleleAnn.getAnnotatedObjectRgdId() + " does NOT have a parent gene associated!");
+            String msg = "Allele " + alleleAnn.getObjectSymbol() + " RGD:" + alleleAnn.getAnnotatedObjectRgdId() + " does NOT have a parent gene associated!";
+            if(_warnings.add(msg)) {
+                log.warn(msg);
+            }
             return null;
         }
         if (genes.size() != 1) {
-            log.warn("Allele " + alleleAnn.getObjectSymbol() + " RGD:" + alleleAnn.getAnnotatedObjectRgdId() + " has multiple parent genes associated!");
+            String msg = "Allele " + alleleAnn.getObjectSymbol() + " RGD:" + alleleAnn.getAnnotatedObjectRgdId() + " has multiple parent genes associated!";
+            if(_warnings.add(msg)) {
+                log.warn(msg);
+            }
             return null;
         }
         return genes.get(0);
