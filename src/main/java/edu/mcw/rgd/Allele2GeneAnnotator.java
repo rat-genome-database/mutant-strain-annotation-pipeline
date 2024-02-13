@@ -8,10 +8,8 @@ import edu.mcw.rgd.process.CounterPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Propagate annotations from mutant allele to parent gene.
@@ -91,15 +89,22 @@ public class Allele2GeneAnnotator extends BaseAnnotator {
         log.info(counters.dumpAlphabetically());
     }
 
+    static Set<String> _warnings = new ConcurrentSkipListSet<>();
     Gene geneFromAllele(Annotation alleleAnn) throws Exception {
 
         List<Gene> genes = getDao().getGeneFromAllele(alleleAnn.getAnnotatedObjectRgdId());
         if (genes.isEmpty()) {
-            log.warn("Allele " + alleleAnn.getObjectSymbol() + " RGD:" + alleleAnn.getAnnotatedObjectRgdId() + " does NOT have a parent gene associated!");
+            String msg = "Allele " + alleleAnn.getObjectSymbol() + " RGD:" + alleleAnn.getAnnotatedObjectRgdId() + " does NOT have a parent gene associated!";
+            if(_warnings.add(msg) ) {
+                log.warn(msg);
+            }
             return null;
         }
         if (genes.size() != 1) {
-            log.warn("Allele " + alleleAnn.getObjectSymbol() + " RGD:" + alleleAnn.getAnnotatedObjectRgdId() + " has multiple parent genes associated!");
+            String msg = "Allele " + alleleAnn.getObjectSymbol() + " RGD:" + alleleAnn.getAnnotatedObjectRgdId() + " has multiple parent genes associated!";
+            if(_warnings.add(msg)) {
+                log.warn(msg);
+            }
             return null;
         }
         return genes.get(0);

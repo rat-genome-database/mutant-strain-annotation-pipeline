@@ -1,3 +1,6 @@
+Feb 13, 2024
+  improved reporting of issues (suppressed multiple identical messages)
+
 Jan 16, 2024
   updated to java 17
 
