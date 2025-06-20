@@ -7,7 +7,7 @@ SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
 
 EMAILLIST=mtutaj@mcw.edu
 if [ "$SERVER" == "REED" ]; then
-  EMAILLIST="mtutaj@mcw.edu,sjwang@mcw.edu"
+  EMAILLIST="mtutaj@mcw.edu sjwang@mcw.edu"
 fi
 
 cd $APPDIR
