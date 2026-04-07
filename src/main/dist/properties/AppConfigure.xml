@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="main" class="edu.mcw.rgd.Main">
-        <property name="version" value="mutant-strain-annotation-pipeline  -- build Feb 16, 2026" />
+        <property name="version" value="mutant-strain-annotation-pipeline  -- build Apr 07, 2026" />
     </bean>
 
     <bean id="dao" class="edu.mcw.rgd.Dao">
