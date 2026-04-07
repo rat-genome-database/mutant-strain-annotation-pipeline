@@ -1,32 +1,43 @@
 # mutant-strain-annotation-pipeline
-****Propagate disease and phenotype annotations from strains to alleles and genes.
 
-The pipeline only propagate strains with one associated  rat mutant allele.  
-Do not propagate when strains have multiple associated alleles.
+Propagates disease and phenotype annotations from strains to alleles and genes.
 
-Disease annotation to strain, propagate to:
-1. associated mutant allele (IMP, sometimes IAGP, same evidence with the strain annotation)
-2. the parent gene of the allele (IMP, sometimes IAGP, same evidence with the strain annotation)
-3. the orthologs for other species  of the parent gene (ISO)
+## Overview
 
-MP annotation to strain, propagate to:
-1. associated mutant allele (IMP, sometimes IAGP, same evidence with the strain annotation)
-2. the parent gene of the allele (IMP, sometimes IAGP, same evidence with the strain annotation)
+The pipeline has two annotators:
+- **Strain2AlleleAnnotator** — propagates annotations from strains to their associated
+  mutant alleles, then to parent genes and orthologs
+- **Allele2GeneAnnotator** — propagates annotations from alleles to parent genes and orthologs
 
-There are two qualifiers that are restricted to use for strain curation: 'induced' and 'penetrance'.
-When the strain has one of the strain-restricted qualifier, only propagate term and evidence code.
-There is a full set of MODEL qualifiers used only for strain curation, they should be omitted
-when propagate annotations to gene and mutant allele. When the qualifier is omitted, the entry 
-in the with also omitted.
-  <pre>
-  MODEL
-  MODEL: age-related
-  MODEL: control
-  MODEL: diet
-  MODEL: disease_progression
-  MODEL: induced
-  MODEL: onset
-  MODEL: spontaneous
-  MODEL: treatment
-  MODEL: xxx
-  </pre>
+Only strains with one associated rat mutant allele are processed.
+Strains with multiple associated alleles are skipped.
+
+## Propagation rules
+
+**Disease annotations (aspect D)** on a strain propagate to:
+1. Associated mutant allele (same evidence: IMP or IAGP)
+2. Parent gene of the allele (same evidence)
+3. Orthologs of the parent gene for other species (ISO)
+
+**MP annotations (aspect N)** on a strain propagate to:
+1. Associated mutant allele (same evidence: IMP or IAGP)
+2. Parent gene of the allele (same evidence)
+
+## Qualifier handling
+
+Strain-restricted qualifiers (`induced`, `penetrance`): only term and evidence code are propagated.
+
+MODEL qualifiers are omitted when propagating to genes and alleles.
+When a qualifier is omitted, the WITH field is also omitted.
+```
+MODEL, MODEL: age-related, MODEL: control, MODEL: diet,
+MODEL: disease_progression, MODEL: induced, MODEL: onset,
+MODEL: spontaneous, MODEL: treatment, MODEL: xxx
+```
+
+## Build and run
+
+Requires Java 17. Built with Gradle:
+```
+./gradlew clean assembleDist
+```

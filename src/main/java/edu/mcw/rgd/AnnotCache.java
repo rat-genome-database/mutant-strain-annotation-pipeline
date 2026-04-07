@@ -85,6 +85,7 @@ public class AnnotCache {
 
     static public String computeKey(Annotation a) {
         return a.getTermAcc()+"\t"+a.getAnnotatedObjectRgdId()+"\t"+a.getRefRgdId()+"\t"+a.getEvidence()
-                +"\t"+a.getWithInfo()+"\t"+a.getQualifier()+"\t"+a.getXrefSource();
+                +"\t"+a.getWithInfo()+"\t"+a.getQualifier()+"\t"+a.getXrefSource()
+                +"\t"+Utils.defaultString(a.getQualifier2())+"\t"+Utils.defaultString(a.getAssociatedWith());
     }
 }

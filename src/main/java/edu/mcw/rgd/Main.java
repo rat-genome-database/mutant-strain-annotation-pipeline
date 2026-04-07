@@ -1,5 +1,6 @@
 package edu.mcw.rgd;
 
+import edu.mcw.rgd.process.MemoryMonitor;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,6 +42,10 @@ public class Main {
     void run(BaseAnnotator strainAnnotator, BaseAnnotator alleleAnnotator) throws Exception {
 
         Date dateStart = new Date();
+
+        MemoryMonitor memoryMonitor = new MemoryMonitor();
+        memoryMonitor.start();
+
         log.info(getVersion());
 
         SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -54,6 +59,8 @@ public class Main {
         // create mutant-allele TO gene TO orthologous genes annotations
         alleleAnnotator.run();
 
+        memoryMonitor.stop();
+        log.info(memoryMonitor.getSummary());
         log.info("=== DONE ===  elapsed: " + Utils.formatElapsedTime(dateStart.getTime(), System.currentTimeMillis()));
         log.info("");
     }
