@@ -3,6 +3,7 @@ package edu.mcw.rgd;
 import edu.mcw.rgd.dao.impl.*;
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
+import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,10 +40,10 @@ public class Dao {
         return strainDAO.getStrainsByType("mutant");
     }
 
-    public List<Annotation> getBaseAnnotationsForAlleles(String aspect) throws Exception {
+    public List<Annotation> getBaseAnnotationsForAlleles(String aspect, CounterPool counters) throws Exception {
 
         List<Gene> mutantAlleles = geneDAO.getActiveGenesByType("allele", SpeciesType.RAT);
-        log.info("  mutant alleles: "+Utils.formatThousands(mutantAlleles.size()));
+        counters.add("   mutant alleles", mutantAlleles.size());
         List<Integer> mutantAlleleRgdIds = new ArrayList<>(mutantAlleles.size());
         for( Gene g: mutantAlleles ) {
             mutantAlleleRgdIds.add(g.getRgdId());
@@ -57,7 +58,7 @@ public class Dao {
             List<Integer> rgdIds = mutantAlleleRgdIds.subList(i, j);
             annots.addAll( annotationDAO.getAnnotationsByRgdIdsListAndAspect(rgdIds, aspect) );
         }
-        log.info("  mutant allele annots with aspect "+aspect+": "+Utils.formatThousands(annots.size()));
+        counters.add("  mutant allele annots with aspect "+aspect, annots.size());
 
         // keep only annotations with approved evidence codes
         annots.removeIf(a -> !getProcessedEvidenceCodes().contains(a.getEvidence()));
@@ -67,10 +68,10 @@ public class Dao {
         return annots;
     }
 
-    public List<Annotation> getBaseAnnotationsForMutantStrains(String aspect) throws Exception {
+    public List<Annotation> getBaseAnnotationsForMutantStrains(String aspect, CounterPool counters) throws Exception {
 
         List<Strain> mutantStrains = getMutantStrains();
-        log.info("  mutant strains: "+Utils.formatThousands(mutantStrains.size()));
+        counters.add("   mutant strains", mutantStrains.size());
         List<Integer> mutantStrainRgdIds = new ArrayList<>(mutantStrains.size());
         for( Strain s: mutantStrains ) {
             mutantStrainRgdIds.add(s.getRgdId());
@@ -85,8 +86,7 @@ public class Dao {
             List<Integer> rgdIds = mutantStrainRgdIds.subList(i, j);
             annots.addAll( annotationDAO.getAnnotationsByRgdIdsListAndAspect(rgdIds, aspect) );
         }
-        log.info("  mutant strain annots with aspect "+aspect+": "+Utils.formatThousands(annots.size()));
-
+        counters.add("  mutant strain annots with aspect "+aspect, annots.size());
         // keep only annotations with approved evidence codes
         annots.removeIf(a -> !getProcessedEvidenceCodes().contains(a.getEvidence()));
 

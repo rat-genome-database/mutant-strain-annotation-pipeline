@@ -31,12 +31,12 @@ public class Strain2AlleleAnnotator extends BaseAnnotator {
 
         CounterPool counters = new CounterPool();
 
-        List<Annotation> baseAnnots = getDao().getBaseAnnotationsForMutantStrains(aspect);
+        List<Annotation> baseAnnots = getDao().getBaseAnnotationsForMutantStrains(aspect, counters);
         counters.add("  base annotations for ontology with aspect "+aspect, baseAnnots.size());
 
         AnnotCache inRgdAnnots = new AnnotCache();
         int initAnnotCount = inRgdAnnots.loadFromDb(getCreatedBy(), aspect, getDao());
-        counters.add("IN RGD INITIAL ANNOTATION COUNT", initAnnotCount);
+        counters.add("INITIAL ANNOTATION COUNT IN DB FOR ASPECT "+aspect, initAnnotCount);
 
 
         List<Annotation> alleleAnnots = new ArrayList<>();
@@ -100,7 +100,7 @@ public class Strain2AlleleAnnotator extends BaseAnnotator {
         int deleted = inRgdAnnots.deleteOrphanedAnnotations(getDao());
         counters.add(" total annotations deleted", deleted);
 
-        counters.add("FINAL ANNOTATION COUNT ", inRgdAnnots.size());
+        counters.add("ULTIMATE ANNOTATION COUNT IN DB FOR ASPECT "+aspect, inRgdAnnots.size());
 
         log.info(counters.dumpAlphabetically());
     }

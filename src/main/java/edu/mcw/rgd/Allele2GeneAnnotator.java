@@ -39,12 +39,12 @@ public class Allele2GeneAnnotator extends BaseAnnotator {
 
         CounterPool counters = new CounterPool();
 
-        List<Annotation> baseAnnots = getDao().getBaseAnnotationsForAlleles(aspect);
+        List<Annotation> baseAnnots = getDao().getBaseAnnotationsForAlleles(aspect, counters);
         counters.add("  allele base annotations for ontology with aspect "+aspect, baseAnnots.size());
 
         AnnotCache inRgdAnnots = new AnnotCache();
         int initAnnotCount = inRgdAnnots.loadFromDb(getCreatedBy(), aspect, getDao());
-        counters.add("IN RGD INITIAL ANNOTATION COUNT", initAnnotCount);
+        counters.add("INITIAL ANNOTATION COUNT IN DB FOR ASPECT "+aspect, initAnnotCount);
 
 
         List<Annotation> geneAnnots = new ArrayList<>();
@@ -84,7 +84,7 @@ public class Allele2GeneAnnotator extends BaseAnnotator {
         int deleted = inRgdAnnots.deleteOrphanedAnnotations(getDao());
         counters.add(" total annotations deleted", deleted);
 
-        counters.add("FINAL ANNOTATION COUNT ", inRgdAnnots.size());
+        counters.add("ULTIMATE ANNOTATION COUNT IN DB FOR ASPECT "+aspect, inRgdAnnots.size());
 
         log.info(counters.dumpAlphabetically());
     }

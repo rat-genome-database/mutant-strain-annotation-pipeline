@@ -1,3 +1,6 @@
+Apr 17, 2026
+  improved status logging; updated dependencies
+
 Apr 07, 2026
   added MemoryMonitor; added qualifier2/associatedWith to annotation key
   format logged numbers with thousands separators; updated README; updated dependencies
