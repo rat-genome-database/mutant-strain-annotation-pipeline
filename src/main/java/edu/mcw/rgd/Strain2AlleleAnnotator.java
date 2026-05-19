@@ -39,9 +39,9 @@ public class Strain2AlleleAnnotator extends BaseAnnotator {
         counters.add("INITIAL ANNOTATION COUNT IN DB FOR ASPECT "+aspect, initAnnotCount);
 
 
-        List<Annotation> alleleAnnots = new ArrayList<>();
-        List<Annotation> geneAnnots = new ArrayList<>();
-        List<Annotation> orthologGeneAnnots = new ArrayList<>();
+        List<Annotation> alleleAnnots = Collections.synchronizedList(new ArrayList<>());
+        List<Annotation> geneAnnots = Collections.synchronizedList(new ArrayList<>());
+        List<Annotation> orthologGeneAnnots = Collections.synchronizedList(new ArrayList<>());
 
         ConcurrentHashMap<String, String> mapAlleleGeneWarnings = new ConcurrentHashMap<>();
 
@@ -68,23 +68,17 @@ public class Strain2AlleleAnnotator extends BaseAnnotator {
                     }
 
                     Annotation alleleAnn = qcGeneAllele(a, geneAlleles.get(0));
-                    synchronized (alleleAnnots) {
-                        alleleAnnots.add(alleleAnn);
-                    }
+                    alleleAnnots.add(alleleAnn);
 
                     Gene gene = geneFromAllele(alleleAnn);
                     if( gene==null ) {
                         return; // unexpected
                     }
                     Annotation geneAnn = qcGene(gene, alleleAnn);
-                    synchronized (geneAnnots) {
-                        geneAnnots.add(geneAnn);
-                    }
+                    geneAnnots.add(geneAnn);
 
                     List<Annotation> oAnnots = qcOrthologAnnots(geneAnn);
-                    synchronized (orthologGeneAnnots) {
-                        orthologGeneAnnots.addAll(oAnnots);
-                    }
+                    orthologGeneAnnots.addAll(oAnnots);
                 } else {
                     counters.increment("  base annotations with multiple gene alleles");
                 }

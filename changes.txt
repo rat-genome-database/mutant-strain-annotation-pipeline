@@ -1,3 +1,6 @@
+May 19, 2026
+  switched per-batch result lists to Collections.synchronizedList; updated dependencies
+
 Apr 17, 2026
   improved status logging; updated dependencies
 

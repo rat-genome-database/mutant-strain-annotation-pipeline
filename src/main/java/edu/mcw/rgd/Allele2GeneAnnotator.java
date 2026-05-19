@@ -47,8 +47,8 @@ public class Allele2GeneAnnotator extends BaseAnnotator {
         counters.add("INITIAL ANNOTATION COUNT IN DB FOR ASPECT "+aspect, initAnnotCount);
 
 
-        List<Annotation> geneAnnots = new ArrayList<>();
-        List<Annotation> orthologGeneAnnots = new ArrayList<>();
+        List<Annotation> geneAnnots = Collections.synchronizedList(new ArrayList<>());
+        List<Annotation> orthologGeneAnnots = Collections.synchronizedList(new ArrayList<>());
 
         Collections.shuffle(baseAnnots);
         baseAnnots.parallelStream().forEach( a -> {
@@ -65,14 +65,10 @@ public class Allele2GeneAnnotator extends BaseAnnotator {
                     return; // unexpected
                 }
                 Annotation geneAnn = qcGene(gene, a);
-                synchronized (geneAnnots) {
-                    geneAnnots.add(geneAnn);
-                }
+                geneAnnots.add(geneAnn);
 
                 List<Annotation> oAnnots = qcOrthologAnnots(geneAnn);
-                synchronized (orthologGeneAnnots) {
-                    orthologGeneAnnots.addAll(oAnnots);
-                }
+                orthologGeneAnnots.addAll(oAnnots);
             } catch(Exception e) {
                 throw new RuntimeException(e);
             }
