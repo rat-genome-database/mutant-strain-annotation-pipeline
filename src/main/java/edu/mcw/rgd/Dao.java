@@ -22,6 +22,7 @@ public class Dao {
     AnnotationDAO annotationDAO = new AnnotationDAO();
     AssociationDAO associationDAO = new AssociationDAO();
     GeneDAO geneDAO = new GeneDAO();
+    OntologyXDAO ontologyXDAO = new OntologyXDAO();
     OrthologDAO orthologDAO = new OrthologDAO();
     StrainDAO strainDAO = new StrainDAO();
 
@@ -105,6 +106,11 @@ public class Dao {
 
     public Gene getGene(int rgdId) throws Exception {
         return geneDAO.getGene(rgdId);
+    }
+
+    /// official qualifier names allowed for gene annotations
+    public Set<String> getGeneQualifiers() throws Exception {
+        return new HashSet<>(ontologyXDAO.getOntologyQualifiers(RgdId.OBJECT_KEY_GENES));
     }
 
     public List<Gene> getGeneFromAllele(int alleleRgdId) throws Exception {

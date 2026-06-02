@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public class Allele2GeneAnnotator extends BaseAnnotator {
 
     private int createdBy; // unique pipeline id
+    private Set<String> geneQualifiers; // official qualifier names allowed for gene annotations
 
     Logger log = LogManager.getLogger("status");
 
@@ -30,6 +31,8 @@ public class Allele2GeneAnnotator extends BaseAnnotator {
         log.info("===");
         log.info("===");
         log.info("  allele2gene annotator started");
+
+        geneQualifiers = getDao().getGeneQualifiers();
 
         run("D");
         run("N");
@@ -134,6 +137,14 @@ public class Allele2GeneAnnotator extends BaseAnnotator {
         Annotation derivedAnn = (Annotation) a.clone();
         derivedAnn.setKey(0);
         derivedAnn.setAnnotatedObjectRgdId(derivedRgdId);
+
+        // RULE: propagate QUALIFIER and WITH_INFO only when the source qualifier is an official gene qualifier;
+        // otherwise drop them. NOTES are never propagated.
+        if( a.getQualifier()==null || !geneQualifiers.contains(a.getQualifier()) ) {
+            derivedAnn.setQualifier(null);
+            derivedAnn.setWithInfo(null);
+        }
+        derivedAnn.setNotes(null);
 
         if( evidenceCodeOverride!=null ) {
             derivedAnn.setEvidence(evidenceCodeOverride);

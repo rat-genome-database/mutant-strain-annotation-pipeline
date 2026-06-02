@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
     <bean id="main" class="edu.mcw.rgd.Main">
-        <property name="version" value="mutant-strain-annotation-pipeline  -- build May 19, 2026" />
+        <property name="version" value="mutant-strain-annotation-pipeline  -- build Jun 2, 2026" />
     </bean>
 
     <bean id="dao" class="edu.mcw.rgd.Dao">
@@ -16,13 +16,6 @@
     <bean id="strainAnnotator" class="edu.mcw.rgd.Strain2AlleleAnnotator">
         <property name="createdBy" value="74" />
         <property name="dao" ref="dao"/>
-        <property name="strainRestrictedQualifiers">
-            <set>
-                <value>induced</value>
-                <value>penetrance</value>
-                <value>MODEL</value>
-            </set>
-        </property>
     </bean>
 
     <bean id="alleleAnnotator" class="edu.mcw.rgd.Allele2GeneAnnotator">

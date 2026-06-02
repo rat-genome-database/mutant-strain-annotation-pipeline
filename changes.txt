@@ -1,3 +1,6 @@
+Jun 2, 2026
+  propagate QUALIFIER/WITH_INFO only for official gene qualifiers, never propagate NOTES (both annotators); updated dependencies
+
 May 19, 2026
   switched per-batch result lists to Collections.synchronizedList; updated dependencies
 

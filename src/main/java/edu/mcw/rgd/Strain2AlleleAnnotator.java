@@ -16,11 +16,13 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public class Strain2AlleleAnnotator extends BaseAnnotator {
 
     private int createdBy;
-    private Set<String> strainRestrictedQualifiers;
+    private Set<String> geneQualifiers; // official qualifier names allowed for gene annotations
 
     Logger log = LogManager.getLogger("status");
 
     public void run() throws Exception {
+
+        geneQualifiers = getDao().getGeneQualifiers();
 
         run("D");
         run("N");
@@ -159,14 +161,13 @@ public class Strain2AlleleAnnotator extends BaseAnnotator {
         derivedAnn.setKey(0);
         derivedAnn.setAnnotatedObjectRgdId(derivedRgdId);
 
-        // RULE: if an annotation has a strain-restricted qualifier, QUALIFIER and WITH_INFO must not be propagated
-        if( a.getQualifier()!=null &&
-                ( getStrainRestrictedQualifiers().contains(a.getQualifier())
-                        || a.getQualifier().startsWith("MODEL") )
-        ) {
+        // RULE: propagate QUALIFIER and WITH_INFO only when the source qualifier is an official gene qualifier;
+        // otherwise drop them. NOTES are never propagated.
+        if( a.getQualifier()==null || !geneQualifiers.contains(a.getQualifier()) ) {
             derivedAnn.setQualifier(null);
             derivedAnn.setWithInfo(null);
         }
+        derivedAnn.setNotes(null);
 
         if( evidenceCodeOverride!=null ) {
             derivedAnn.setEvidence(evidenceCodeOverride);
@@ -197,13 +198,5 @@ public class Strain2AlleleAnnotator extends BaseAnnotator {
 
     public int getCreatedBy() {
         return createdBy;
-    }
-
-    public void setStrainRestrictedQualifiers(Set<String> strainRestrictedQualifiers) {
-        this.strainRestrictedQualifiers = strainRestrictedQualifiers;
-    }
-
-    public Set<String> getStrainRestrictedQualifiers() {
-        return strainRestrictedQualifiers;
     }
 }
